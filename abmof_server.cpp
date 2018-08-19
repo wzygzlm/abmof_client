@@ -8,6 +8,7 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <vector>
 
 using namespace cv;
 
@@ -50,8 +51,8 @@ int main(int argc, char** argv)
     //OpenCV Code
     //----------------------------------------------------------
 
-    Mat img;
-    img = Mat::zeros(240 , 180, CV_8UC1);    
+    Mat img, img_color;
+    img = Mat::zeros(180 , 240, CV_8UC1);    
     int imgSize = img.total() * img.elemSize();
     uchar *iptr = img.data;
     int bytes = 0;
@@ -65,18 +66,45 @@ int main(int argc, char** argv)
     std::cout << "Image Size:" << imgSize << std::endl;
 
 
-    namedWindow("CV Video Client", WINDOW_NORMAL);
-    resizeWindow("CV Video Client", img.cols * 3,  img.rows * 3);
+    namedWindow("Event slice Client", CV_WINDOW_NORMAL);
+    // resizeWindow("Event sice Client", img.rows * 3,  img.cols * 3);
 
     while (key != 'q') {
+
+        double minIntensity, maxIntensity;
 
         if ((bytes = recv(sokt, iptr, imgSize , MSG_WAITALL)) == -1) {
             std::cerr << "recv failed, received bytes = " << bytes << std::endl;
         }
+
+        minMaxLoc(img, &minIntensity, &maxIntensity);
+        cvtColor(img, img_color, COLOR_GRAY2BGR);
+
+        for (int  row = 0; row < 180; row++)
+        {
+            for (int col = 0; col < 240; col++)
+            {
+                int index = row * 240 + col;
+                if(iptr[index] > 0 && iptr[index] < 127)
+                {
+                    img_color.at<Vec3b>(row, col)[0] = 0;
+                    img_color.at<Vec3b>(row, col)[1] = 0 ;
+                    img_color.at<Vec3b>(row, col)[2] = 255;
+                    // iptr[index] = (uchar)(iptr[i]/maxIntensity*255.0);
+                }
+                else if(iptr[index] >= 127)
+                {
+                    img_color.at<Vec3b>(row, col)[0] = 0;
+                    img_color.at<Vec3b>(row, col)[1] = 255 ;
+                    img_color.at<Vec3b>(row, col)[2] = 0;
+                }
+            }
+        }
         
-        cv::imshow("CV Video Client", img); 
+        cv::imshow("Event slice Client", img_color); 
       
-        if (key = cv::waitKey(10) >= 0) break;
+        // if (key = cv::waitKey(10) >= 0) break;
+        if (key = cv::waitKey(10) >= 0);
     }   
 
     close(sokt);
