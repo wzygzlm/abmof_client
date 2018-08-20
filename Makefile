@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -g -Wall
-SRCS = abmof_server.cpp
-PROG = abmof_server
+SRCS = abmof_client.cpp
+PROG = abmof_client
 
 OPENCV = `pkg-config opencv --cflags --libs`
 LIBS = $(OPENCV)
