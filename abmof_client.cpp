@@ -5,6 +5,8 @@
  */
 
 #include "opencv2/opencv.hpp"
+#include <iostream>
+#include <math.h>
 #include <sys/socket.h> 
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -78,6 +80,7 @@ int main(int argc, char** argv)
         }
 
         minMaxLoc(img, &minIntensity, &maxIntensity);
+        printf("The maximum intensity is %f.\n", maxIntensity);
         cvtColor(img, img_color, COLOR_GRAY2BGR);
 
         for (int  row = 0; row < 180; row++)
@@ -85,18 +88,16 @@ int main(int argc, char** argv)
             for (int col = 0; col < 240; col++)
             {
                 int index = row * 240 + col;
-                if(iptr[index] > 0 && iptr[index] < 127)
+
+                int tmp = round(iptr[index]*255.0/maxIntensity);
+                // std::cout << "round value is: " << (unsigned int)tmp << std::endl;
+                iptr[index]= (uchar)(tmp);
+                if (iptr[index] != 0)
                 {
+                    // printf("The non-zero intensity is %d.\n", iptr[index]);
                     img_color.at<Vec3b>(row, col)[0] = 0;
                     img_color.at<Vec3b>(row, col)[1] = 0 ;
                     img_color.at<Vec3b>(row, col)[2] = 255;
-                    // iptr[index] = (uchar)(iptr[i]/maxIntensity*255.0);
-                }
-                else if(iptr[index] >= 127)
-                {
-                    img_color.at<Vec3b>(row, col)[0] = 0;
-                    img_color.at<Vec3b>(row, col)[1] = 255 ;
-                    img_color.at<Vec3b>(row, col)[2] = 0;
                 }
             }
         }
