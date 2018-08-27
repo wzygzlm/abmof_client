@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 
         cvtColor(img, img_color, COLOR_GRAY2BGR);
 
-        for(int bufIndex = 0; bufIndex  < imgSize; bufIndex = bufIndex + 4)
+        for(int bufIndex = 0; bufIndex  < bytes; bufIndex = bufIndex + 4)
         {
             uchar x = recvBuf[bufIndex];
             uchar y = recvBuf[bufIndex + 1];
