@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS = -g -Wall
-SRC_TCP = abmof_client.cpp
+CFLAGS = -g -Wall -O0
+SRC_TCP = abmof_client_TCP.cpp
 SRC_UDP = abmof_client_UDP.cpp
 PROG_TCP = abmof_client_TCP
 PROG_UDP = abmof_client_UDP
