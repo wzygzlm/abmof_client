@@ -13,7 +13,6 @@
 #include <vector> 
 using namespace cv;
 
-
 int main(int argc, char** argv)
 {
 
@@ -76,37 +75,70 @@ int main(int argc, char** argv)
         std::cerr << "send failed, received bytes = " << bytes << std::endl;
     }
 
+    char recvBuf[imgSize];
+
     while (key != 'q') {
 
         double minIntensity, maxIntensity;
 
-        if ((bytes = recvfrom(sokt, iptr, imgSize , MSG_WAITALL, (struct sockaddr *) &serverAddr, &addrLen)) == -1) {
+        if ((bytes = recvfrom(sokt, recvBuf, imgSize , MSG_WAITALL, (struct sockaddr *) &serverAddr, &addrLen)) == -1) {
             std::cerr << "recv failed, received bytes = " << bytes << std::endl;
         }
 
+        printf("Received %d data from the server.\n", bytes);
+        printf("The first four bytes are %d, %d, %d %d.\n", (uchar)recvBuf[0], (uchar)recvBuf[1], recvBuf[2], recvBuf[3]);
         minMaxLoc(img, &minIntensity, &maxIntensity);
         printf("The maximum intensity is %f.\n", maxIntensity);
+
+        // Reset image
+        // img = Mat::zeros(img.size(), img.type());
+
         cvtColor(img, img_color, COLOR_GRAY2BGR);
 
-        for (int  row = 0; row < 180; row++)
+        for(int bufIndex = 0; bufIndex  < imgSize; bufIndex = bufIndex + 4)
         {
-            for (int col = 0; col < 240; col++)
-            {
-                int index = row * 240 + col;
+            uchar x = recvBuf[bufIndex];
+            uchar y = recvBuf[bufIndex + 1];
+            uchar pol = recvBuf[bufIndex + 2];
 
-                int tmp = round(iptr[index]*255.0/maxIntensity);
-                // std::cout << "round value is: " << (unsigned int)tmp << std::endl;
-                iptr[index]= (uchar)(tmp);
-                if (iptr[index] != 0)
-                {
-                    // printf("The non-zero intensity is %d.\n", iptr[index]);
-                    img_color.at<Vec3b>(row, col)[0] = 0;
-                    img_color.at<Vec3b>(row, col)[1] = 0 ;
-                    img_color.at<Vec3b>(row, col)[2] = 255;
-                }
+            if(pol == 1)
+            {
+                img_color.at<Vec3b>(y, x)[0] = 0;
+                img_color.at<Vec3b>(y, x)[1] = 0 ;
+                img_color.at<Vec3b>(y, x)[2] = 255;
             }
+            else
+            {
+                img_color.at<Vec3b>(y, x)[0] = 0;
+                img_color.at<Vec3b>(y, x)[1] = 255;
+                img_color.at<Vec3b>(y, x)[2] = 0;
+            }
+            
         }
-        
+
+//        int counter = 0;
+//        for (int  row = 0; row < 180; row++)
+//        {
+//            for (int col = 0; col < 240; col++)
+//            {
+//                int index = row * 240 + col;
+//
+//                int tmp = round(iptr[index]*255.0/maxIntensity);
+//                // std::cout << "round value is: " << (unsigned int)tmp << std::endl;
+//                iptr[index]= (uchar)(tmp);
+//                if (iptr[index] != 0)
+//                {
+//                    // printf("The non-zero intensity is %d.\n", iptr[index]);
+//                    img_color.at<Vec3b>(row, col)[0] = 0;
+//                    img_color.at<Vec3b>(row, col)[1] = 0 ;
+//                    img_color.at<Vec3b>(row, col)[2] = 255;
+//                    counter++;
+//                }
+//            }
+//        }
+//        
+//        printf("Non-zero pixel number is %d.\n", counter);
+
         cv::imshow("Event slice Client", img_color); 
       
         // if (key = cv::waitKey(10) >= 0) break;
