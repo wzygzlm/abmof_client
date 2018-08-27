@@ -1,10 +1,17 @@
 CC = g++
 CFLAGS = -g -Wall
-SRCS = abmof_client.cpp
-PROG = abmof_client
+SRC_TCP = abmof_client.cpp
+SRC_UDP = abmof_client_UDP.cpp
+PROG_TCP = abmof_client_TCP
+PROG_UDP = abmof_client_UDP
 
 OPENCV = `pkg-config opencv --cflags --libs`
 LIBS = $(OPENCV)
 
-$(PROG):$(SRCS)
-		$(CC) $(CFLAGS) -o $(PROG) $(SRCS) $(LIBS)
+ALL: $(PROG_TCP) $(PROG_UDP)
+
+$(PROG_TCP):$(SRC_TCP)
+		$(CC) $(CFLAGS) -o $(PROG_TCP) $(SRC_TCP) $(LIBS)
+
+$(PROG_UDP):$(SRC_UDP)
+		$(CC) $(CFLAGS) -o $(PROG_UDP) $(SRC_UDP) $(LIBS)
