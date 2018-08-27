@@ -10,8 +10,7 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <vector>
-
+#include <vector> 
 using namespace cv;
 
 
@@ -35,17 +34,17 @@ int main(int argc, char** argv)
     struct  sockaddr_in serverAddr;
     socklen_t           addrLen = sizeof(struct sockaddr_in);
 
-    if ((sokt = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((sokt = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
         std::cerr << "socket() failed" << std::endl;
     }
 
-    serverAddr.sin_family = PF_INET;
+    serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = inet_addr(serverIP);
     serverAddr.sin_port = htons(serverPort);
 
-    if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
-        std::cerr << "connect() failed!" << std::endl;
-    }
+    // if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
+    //     std::cerr << "connect() failed!" << std::endl;
+    //}
 
 
 
@@ -71,11 +70,17 @@ int main(int argc, char** argv)
     namedWindow("Event slice Client", CV_WINDOW_NORMAL);
     // resizeWindow("Event sice Client", img.rows * 3,  img.cols * 3);
 
+    // Send an simple message to start the connection.
+    char message[] = "OK.";
+    if ((bytes = sendto(sokt, message, sizeof(message) , MSG_WAITALL, (struct sockaddr *) &serverAddr, addrLen)) == -1) {
+        std::cerr << "send failed, received bytes = " << bytes << std::endl;
+    }
+
     while (key != 'q') {
 
         double minIntensity, maxIntensity;
 
-        if ((bytes = recv(sokt, iptr, imgSize , MSG_WAITALL)) == -1) {
+        if ((bytes = recvfrom(sokt, iptr, imgSize , MSG_WAITALL, (struct sockaddr *) &serverAddr, &addrLen)) == -1) {
             std::cerr << "recv failed, received bytes = " << bytes << std::endl;
         }
 
