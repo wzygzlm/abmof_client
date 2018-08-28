@@ -86,7 +86,7 @@ int main(int argc, char** argv)
         }
 
         printf("Received %d data from the server.\n", bytes);
-        printf("The first four bytes are %d, %d, %d %d.\n", (uchar)recvBuf[0], (uchar)recvBuf[1], recvBuf[2], recvBuf[3]);
+        printf("The first four bytes are %x, %x, %x, %x.\n", (uchar)recvBuf[0], (uchar)recvBuf[1], (uchar)recvBuf[2], (uchar)recvBuf[3]);
         minMaxLoc(img, &minIntensity, &maxIntensity);
         printf("The maximum intensity is %f.\n", maxIntensity);
 
@@ -95,7 +95,8 @@ int main(int argc, char** argv)
 
         cvtColor(img, img_color, COLOR_GRAY2BGR);
 
-        for(int bufIndex = 0; bufIndex  < bytes; bufIndex = bufIndex + 4)
+        // start reading from the fourth bytes. The first bytes are used to store some debug information from the server.
+        for(int bufIndex = 4; bufIndex  < bytes; bufIndex = bufIndex + 4)
         {
             uchar x = recvBuf[bufIndex];
             uchar y = recvBuf[bufIndex + 1];
