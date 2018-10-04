@@ -93,7 +93,7 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
         {
             uchar x = recvBuf[bufIndex];
             uchar y = recvBuf[bufIndex + 1];
-            uchar pol = recvBuf[bufIndex + 2];
+            uchar pol = recvBuf[bufIndex + 2] & 0x01; // The last bit of the third bytes is polarity.
 
             if(pol == 1)
             {
