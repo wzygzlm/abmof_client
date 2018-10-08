@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     //----------------------------------------------------------
 
     Mat img, img_color;
-    img = Mat::zeros(180 , 240, CV_8UC1);    
+    img = Mat::ones(180 , 240, CV_8UC1)*127;
     int imgSize = img.total() * img.elemSize();
     uchar *iptr = img.data;
     int bytes = 0;
@@ -101,27 +101,28 @@ int main(int argc, char** argv)
             uchar x = recvBuf[bufIndex];
             uchar y = recvBuf[bufIndex + 1];
             uchar pol = recvBuf[bufIndex + 2] & 0x01; // The last bit of the third bytes is polarity.
-            char OF_x = (recvBuf[bufIndex + 2] & 0x0e) - 3;
-            char OF_y = ((recvBuf[bufIndex + 2] & 0x70) >> 4) - 3;
+            char OF_x = (recvBuf[bufIndex + 2] & 0x0e) - 3; //14 00001110
+            char OF_y = ((recvBuf[bufIndex + 2] & 0x70) >> 4) - 3; //112 01110000
 
             // Only print once
+
             if (bufIndex == 40) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
 
             Point startPt = Point(x, y);
             Point endPt = Point(x + OF_x, y + OF_y);
 
             if(OF_x != -3 && OF_y != -3) cv::arrowedLine(img_color, startPt, endPt, (0, 0, 255), 1);
-            
+
             if(pol == 1)
             {
-                img_color.at<Vec3b>(y, x)[0] = 0;
-                img_color.at<Vec3b>(y, x)[1] = 0 ;
+                img_color.at<Vec3b>(y, x)[0] = 255;
+                img_color.at<Vec3b>(y, x)[1] = 255;
                 img_color.at<Vec3b>(y, x)[2] = 255;
             }
             else
             {
                 img_color.at<Vec3b>(y, x)[0] = 0;
-                img_color.at<Vec3b>(y, x)[1] = 255;
+                img_color.at<Vec3b>(y, x)[1] = 0;
                 img_color.at<Vec3b>(y, x)[2] = 0;
             }
             

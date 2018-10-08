@@ -51,7 +51,7 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
     //----------------------------------------------------------
 
     Mat img, img_color;
-    img = Mat::zeros(180 , 240, CV_8UC1);    
+    img = Mat::ones(180 , 240, CV_8UC1)*127;;    
     int imgSize = img.total() * img.elemSize();
     uchar *iptr = img.data;
     int bytes = 0;
@@ -107,14 +107,14 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
 
             if(pol == 1)
             {
-                img_color.at<Vec3b>(y, x)[0] = 0;
-                img_color.at<Vec3b>(y, x)[1] = 0 ;
+                img_color.at<Vec3b>(y, x)[0] = 255;
+                img_color.at<Vec3b>(y, x)[1] = 255;
                 img_color.at<Vec3b>(y, x)[2] = 255;
             }
             else
             {
                 img_color.at<Vec3b>(y, x)[0] = 0;
-                img_color.at<Vec3b>(y, x)[1] = 255;
+                img_color.at<Vec3b>(y, x)[1] = 0;
                 img_color.at<Vec3b>(y, x)[2] = 0;
             }
             
