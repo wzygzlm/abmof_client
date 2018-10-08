@@ -6,8 +6,10 @@ How to install?
 1. install opencv library:
 
 sudo add-apt-repository ppa:timsc/opencv-3.3
+
 sudo apt-get update
-sudo apt-get install  libopencv-dev libopencv-shape-dev libopencv-dnn-dev
+
+sudo apt-get install libopencv-dev libopencv-shape-dev libopencv-dnn-dev
 
 2. build
 
