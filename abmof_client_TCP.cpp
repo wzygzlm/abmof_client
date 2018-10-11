@@ -94,17 +94,16 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
             uchar x = recvBuf[bufIndex];
             uchar y = recvBuf[bufIndex + 1];
             uchar pol = recvBuf[bufIndex + 2] & 0x01; // The last bit of the third bytes is polarity.
-            char OF_x = (recvBuf[bufIndex + 2] & 0x0e) - 3;
+            char OF_x = ((recvBuf[bufIndex + 2] & 0x0e) >> 1) - 3;
             char OF_y = ((recvBuf[bufIndex + 2] & 0x70) >> 4) - 3;
 
             // Only print once
             if (bufIndex == 40) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
 
             Point startPt = Point(x, y);
-            Point endPt = Point(x + 0, y + 3);
+            Point endPt = Point(x + OF_x, y + OF_y);
 
-
-
+            if(OF_x != -3 && OF_y != -3) cv::arrowedLine(img_color, startPt, endPt, (0, 0, 255), 1);
 
             if(pol == 1)
             {
@@ -118,13 +117,13 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
                 img_color.at<Vec3b>(y, x)[1] = 0;
                 img_color.at<Vec3b>(y, x)[2] = 0;
             }
-            
+            /*
             if(OF_x != -3 && OF_y != -3) //cv::line(img_color, startPt, endPt, (0, 0, 255), 1);
             {
                 img_color.at<Vec3b>(y, x)[0] = 127+OF_x*40;
                 img_color.at<Vec3b>(y, x)[1] = 127+OF_y*40;
                 img_color.at<Vec3b>(y, x)[2] = 0;
-            }
+            }*/
             
         }
 
