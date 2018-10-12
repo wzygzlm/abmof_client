@@ -103,7 +103,8 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
             Point startPt = Point(x, y);
             Point endPt = Point(x + OF_x * 5, y + OF_y * 5);
 
-            if(OF_x != -3 && OF_y != -3 && OF_x != 7 && OF_y != 7) cv::arrowedLine(img_color, startPt, endPt, (0, 0, 255), 1);
+            // If (OF_x, OF_y) = (4, 4) means it's invalid OF.
+            if((OF_x != -3 && OF_y != -3) || (OF_x != 4 && OF_y != 4)) cv::arrowedLine(img_color, startPt, endPt, (0, 0, 255), 1);
 
             if(pol == 1)
             {

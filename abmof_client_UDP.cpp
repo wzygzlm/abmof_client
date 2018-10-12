@@ -101,17 +101,17 @@ int main(int argc, char** argv)
             uchar x = recvBuf[bufIndex];
             uchar y = recvBuf[bufIndex + 1];
             uchar pol = recvBuf[bufIndex + 2] & 0x01; // The last bit of the third bytes is polarity.
-            char OF_x = (recvBuf[bufIndex + 2] & 0x0e) - 3; //14 00001110
-            char OF_y = ((recvBuf[bufIndex + 2] & 0x70) >> 4) - 3; //112 01110000
+            char OF_x = ((recvBuf[bufIndex + 2] & 0x0e) >> 1) - 3;
+            char OF_y = ((recvBuf[bufIndex + 2] & 0x70) >> 4) - 3;
 
             // Only print once
-
             if (bufIndex == 40) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
 
             Point startPt = Point(x, y);
-            Point endPt = Point(x + OF_x, y + OF_y);
+            Point endPt = Point(x + OF_x * 5, y + OF_y * 5);
 
-            if(OF_x != -3 && OF_y != -3) cv::arrowedLine(img_color, startPt, endPt, (0, 0, 255), 1);
+            // If (OF_x, OF_y) = (4, 4) means it's invalid OF.
+            if((OF_x != -3 && OF_y != -3) || (OF_x != 4 && OF_y != 4)) cv::arrowedLine(img_color, startPt, endPt, (0, 0, 255), 1);
 
             if(pol == 1)
             {
