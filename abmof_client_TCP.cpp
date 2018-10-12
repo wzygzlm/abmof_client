@@ -101,9 +101,9 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
             if (bufIndex == 40) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
 
             Point startPt = Point(x, y);
-            Point endPt = Point(x + OF_x, y + OF_y);
+            Point endPt = Point(x + OF_x * 5, y + OF_y * 5);
 
-            if(OF_x != -3 && OF_y != -3) cv::arrowedLine(img_color, startPt, endPt, (0, 0, 255), 1);
+            if(OF_x != -3 && OF_y != -3 && OF_x != 7 && OF_y != 7) cv::arrowedLine(img_color, startPt, endPt, (0, 0, 255), 1);
 
             if(pol == 1)
             {
