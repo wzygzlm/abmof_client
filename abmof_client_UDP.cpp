@@ -10,8 +10,81 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <vector> 
-using namespace cv;
+#include <vector>
+
+using namespace cv; 
+
+typedef struct {
+    double r;       // a fraction between 0 and 1
+    double g;       // a fraction between 0 and 1
+    double b;       // a fraction between 0 and 1
+} rgb;
+
+typedef struct {
+    double h;       // angle in degrees
+    double s;       // a fraction between 0 and 1
+    double v;       // a fraction between 0 and 1
+} hsv;
+
+static rgb   hsv2rgb(hsv in);
+
+rgb hsv2rgb(hsv in)
+{
+    double      hh, p, q, t, ff;
+    long        i;
+    rgb         out;
+
+    if(in.s <= 0.0) {       // < is bogus, just shuts up warnings
+        out.r = in.v;
+        out.g = in.v;
+        out.b = in.v;
+        return out;
+    }
+    hh = in.h;
+    if(hh >= 360.0) hh = 0.0;
+    hh /= 60.0;
+    i = (long)hh;
+    ff = hh - i;
+    p = in.v * (1.0 - in.s);
+    q = in.v * (1.0 - (in.s * ff));
+    t = in.v * (1.0 - (in.s * (1.0 - ff)));
+
+    switch(i) {
+    case 0:
+        out.r = in.v;
+        out.g = t;
+        out.b = p;
+        break;
+    case 1:
+        out.r = q;
+        out.g = in.v;
+        out.b = p;
+        break;
+    case 2:
+        out.r = p;
+        out.g = in.v;
+        out.b = t;
+        break;
+
+    case 3:
+        out.r = p;
+        out.g = q;
+        out.b = in.v;
+        break;
+    case 4:
+        out.r = t;
+        out.g = p;
+        out.b = in.v;
+        break;
+    case 5:
+    default:
+        out.r = in.v;
+        out.g = p;
+        out.b = q;
+        break;
+    }
+    return out;     
+}
 
 int main(int argc, char** argv)
 {
@@ -51,12 +124,16 @@ int main(int argc, char** argv)
     //OpenCV Code
     //----------------------------------------------------------
 
-    Mat img, img_color;
-    img = Mat::ones(180 , 240, CV_8UC1)*127;
+    Mat img, img_color, img_resize;
+    img = Mat::ones(180 , 240, CV_8UC1)*127;;    
     int imgSize = img.total() * img.elemSize();
     uchar *iptr = img.data;
     int bytes = 0;
     int key;
+    int scalsz = 3;
+    hsv hsvcode; 
+    rgb rgbcode;
+    float angle;
 
     //make img continuos
     if ( ! img.isContinuous() ) { 
@@ -94,6 +171,7 @@ int main(int argc, char** argv)
         // img = Mat::zeros(img.size(), img.type());
 
         cvtColor(img, img_color, COLOR_GRAY2BGR);
+        cv::resize(img_color, img_resize, cv::Size(), scalsz, scalsz);
 
         // start reading from the fourth bytes. The first bytes are used to store some debug information from the server.
         for(int bufIndex = 4; bufIndex  < bytes; bufIndex = bufIndex + 4)
@@ -107,24 +185,63 @@ int main(int argc, char** argv)
             // Only print once
             if (bufIndex == 40) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
 
-            Point startPt = Point(x, y);
-            Point endPt = Point(x + OF_x * 5, y + OF_y * 5);
-
+            Point startPt = Point(x*scalsz, y*scalsz);
+            Point endPt = Point(x*scalsz + OF_x * 5, y*scalsz + OF_y * 5);
+            /*
+            angle = atan2 (OF_y,OF_x) * 180 / (3.14);
+            hsvcode = {angle ,abs((OF_y+OF_x)/6) ,1};
+            rgbcode = hsv2rgb(hsvcode);
+            std::cout << "Vx Vy value is: " << (OF_x) << (OF_y) <<std::endl;
+            std::cout << "RGB R value is: " << (rgbcode.r) << std::endl;
+            std::cout << "RGB G value is: " << (rgbcode.g) << std::endl;
+            std::cout << "RGB B value is: " << (rgbcode.b) << std::endl;
+            */
             // If (OF_x, OF_y) = (4, 4) means it's invalid OF.
-            if((OF_x != -3 && OF_y != -3) || (OF_x != 4 && OF_y != 4)) cv::arrowedLine(img_color, startPt, endPt, (0, 0, 255), 1);
+	    if(OF_x != -3 && OF_y != -3)
+	    {
+		    if(OF_x != 4 && OF_y != 4)
+		    {
+			    cv::arrowedLine(img_resize, startPt, endPt, (0, 0, 255), 1);
+		    }
+	    }
 
             if(pol == 1)
             {
-                img_color.at<Vec3b>(y, x)[0] = 255;
-                img_color.at<Vec3b>(y, x)[1] = 255;
-                img_color.at<Vec3b>(y, x)[2] = 255;
+                for(int i = 0; i < scalsz; i++)
+                {
+                    for(int j = 0; j < scalsz; j++)
+                    {
+                        img_resize.at<Vec3b>(y*scalsz+i, x*scalsz+j)[0] = 255;
+                        img_resize.at<Vec3b>(y*scalsz+i, x*scalsz+j)[1] = 255;
+                        img_resize.at<Vec3b>(y*scalsz+i, x*scalsz+j)[2] = 255;
+                    }
+                }
+                //img_color.at<Vec3b>(y, x)[0] = 255;
+                //img_color.at<Vec3b>(y, x)[1] = 255;
+                //img_color.at<Vec3b>(y, x)[2] = 255;
             }
             else
             {
-                img_color.at<Vec3b>(y, x)[0] = 0;
-                img_color.at<Vec3b>(y, x)[1] = 0;
-                img_color.at<Vec3b>(y, x)[2] = 0;
+                for(int i = 0; i < scalsz; i++)
+                {
+                    for(int j = 0; j < scalsz; j++)
+                    {
+                        img_resize.at<Vec3b>(y*scalsz+i, x*scalsz+j)[0] = 0;
+                        img_resize.at<Vec3b>(y*scalsz+i, x*scalsz+j)[1] = 0;
+                        img_resize.at<Vec3b>(y*scalsz+i, x*scalsz+j)[2] = 0;
+                    }
+                }                
+                //img_color.at<Vec3b>(y, x)[0] = 0;
+                //img_color.at<Vec3b>(y, x)[1] = 0;
+                //img_color.at<Vec3b>(y, x)[2] = 0;
             }
+            /*
+            if(OF_x != -3 && OF_y != -3) //cv::line(img_color, startPt, endPt, (0, 0, 255), 1);
+            {
+                img_color.at<Vec3b>(y, x)[0] = 127+OF_x*40;
+                img_color.at<Vec3b>(y, x)[1] = 127+OF_y*40;
+                img_color.at<Vec3b>(y, x)[2] = 0;
+            }*/
             
         }
 
@@ -150,8 +267,8 @@ int main(int argc, char** argv)
 //        }
 //        
 //        printf("Non-zero pixel number is %d.\n", counter);
-
-        cv::imshow("Event slice Client", img_color); 
+        
+        cv::imshow("Event slice Client", img_resize); 
       
         // if (key = cv::waitKey(10) >= 0) break;
         if (key = cv::waitKey(10) >= 0);
