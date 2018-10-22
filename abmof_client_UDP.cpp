@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 	    {
 		    if(OF_x != 4 && OF_y != 4)
 		    {
-			    cv::arrowedLine(img_resize, startPt, endPt, (0, 0, 255), 1);
+			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(0, 0, 255), 1);
 		    }
 	    }
 
