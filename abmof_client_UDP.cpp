@@ -179,14 +179,14 @@ int main(int argc, char** argv)
             uchar x = recvBuf[bufIndex];
             uchar y = recvBuf[bufIndex + 1];
             uchar pol = recvBuf[bufIndex + 2] & 0x01; // The last bit of the third bytes is polarity.
-            char OF_x = ((recvBuf[bufIndex + 2] & 0x0e) >> 1) - 3;
-            char OF_y = ((recvBuf[bufIndex + 2] & 0x70) >> 4) - 3;
+            char OF_x = 3 - ((recvBuf[bufIndex + 2] & 0x0e) >> 1); // Notice the direction should start from t-2 slice to t-1 slice.
+            char OF_y = 3 - ((recvBuf[bufIndex + 2] & 0x70) >> 4);
 
             // Only print once
-            if (bufIndex == 40) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
+            if (bufIndex == 4) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
 
             Point startPt = Point(x*scalsz, y*scalsz);
-            Point endPt = Point(x*scalsz + OF_x * 5, y*scalsz + OF_y * 5);
+            Point endPt = Point(x*scalsz + OF_x * 5,  y*scalsz + OF_y * 5);
             /*
             angle = atan2 (OF_y,OF_x) * 180 / (3.14);
             hsvcode = {angle ,abs((OF_y+OF_x)/6) ,1};
@@ -196,10 +196,10 @@ int main(int argc, char** argv)
             std::cout << "RGB G value is: " << (rgbcode.g) << std::endl;
             std::cout << "RGB B value is: " << (rgbcode.b) << std::endl;
             */
-            // If (OF_x, OF_y) = (4, 4) means it's invalid OF.
-	    if(OF_x != -3 && OF_y != -3)
+            // If (OF_x, OF_y) = (-4, -4) means it's invalid OF.
+	    if(OF_x != 3 && OF_y != 3)
 	    {
-		    if(OF_x != 4 && OF_y != 4)
+		    if(OF_x != -4 && OF_y != -4)
 		    {
 			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(0, 0, 255), 1);
 		    }
