@@ -12,78 +12,118 @@
 #include <unistd.h>
 #include <vector>
 
-using namespace cv; 
+using namespace cv;
 
-typedef struct {
-    double r;       // a fraction between 0 and 1
-    double g;       // a fraction between 0 and 1
-    double b;       // a fraction between 0 and 1
-} rgb;
+#define PI 3.14159265
 
-typedef struct {
-    double h;       // angle in degrees
-    double s;       // a fraction between 0 and 1
-    double v;       // a fraction between 0 and 1
-} hsv;
-
-static rgb   hsv2rgb(hsv in);
-
-rgb hsv2rgb(hsv in)
+class RGB
 {
-    double      hh, p, q, t, ff;
-    long        i;
-    rgb         out;
+public:
+	unsigned char R;
+	unsigned char G;
+	unsigned char B;
 
-    if(in.s <= 0.0) {       // < is bogus, just shuts up warnings
-        out.r = in.v;
-        out.g = in.v;
-        out.b = in.v;
-        return out;
-    }
-    hh = in.h;
-    if(hh >= 360.0) hh = 0.0;
-    hh /= 60.0;
-    i = (long)hh;
-    ff = hh - i;
-    p = in.v * (1.0 - in.s);
-    q = in.v * (1.0 - (in.s * ff));
-    t = in.v * (1.0 - (in.s * (1.0 - ff)));
+	RGB(unsigned char r, unsigned char g, unsigned char b)
+	{
+		R = r;
+		G = g;
+		B = b;
+	}
 
-    switch(i) {
-    case 0:
-        out.r = in.v;
-        out.g = t;
-        out.b = p;
-        break;
-    case 1:
-        out.r = q;
-        out.g = in.v;
-        out.b = p;
-        break;
-    case 2:
-        out.r = p;
-        out.g = in.v;
-        out.b = t;
-        break;
+	bool Equals(RGB rgb)
+	{
+		return (R == rgb.R) && (G == rgb.G) && (B == rgb.B);
+	}
+};
 
-    case 3:
-        out.r = p;
-        out.g = q;
-        out.b = in.v;
-        break;
-    case 4:
-        out.r = t;
-        out.g = p;
-        out.b = in.v;
-        break;
-    case 5:
-    default:
-        out.r = in.v;
-        out.g = p;
-        out.b = q;
-        break;
-    }
-    return out;     
+class HSV
+{
+public:
+	double H;
+	double S;
+	double V;
+
+	HSV(double h, double s, double v)
+	{
+		H = h;
+		S = s;
+		V = v;
+	}
+
+	bool Equals(HSV hsv)
+	{
+		return (H == hsv.H) && (S == hsv.S) && (V == hsv.V);
+	}
+};
+
+static RGB HSVToRGB(HSV hsv) {
+	double r = 0, g = 0, b = 0;
+
+	if (hsv.S == 0)
+	{
+		r = hsv.V;
+		g = hsv.V;
+		b = hsv.V;
+	}
+	else
+	{
+		int i;
+		double f, p, q, t;
+
+		if (hsv.H == 360)
+			hsv.H = 0;
+		else
+			hsv.H = hsv.H / 60;
+
+		i = (int)trunc(hsv.H);
+		f = hsv.H - i;
+
+		p = hsv.V * (1.0 - hsv.S);
+		q = hsv.V * (1.0 - (hsv.S * f));
+		t = hsv.V * (1.0 - (hsv.S * (1.0 - f)));
+
+		switch (i)
+		{
+		case 0:
+			r = hsv.V;
+			g = t;
+			b = p;
+			break;
+
+		case 1:
+			r = q;
+			g = hsv.V;
+			b = p;
+			break;
+
+		case 2:
+			r = p;
+			g = hsv.V;
+			b = t;
+			break;
+
+		case 3:
+			r = p;
+			g = q;
+			b = hsv.V;
+			break;
+
+		case 4:
+			r = t;
+			g = p;
+			b = hsv.V;
+			break;
+
+		default:
+			r = hsv.V;
+			g = p;
+			b = q;
+			break;
+		}
+
+	}
+
+	return RGB((unsigned char)(r * 255), (unsigned char)(g * 255), (unsigned char)(b * 255));
 }
 
 int main(int argc, char** argv)
@@ -131,9 +171,6 @@ int main(int argc, char** argv)
     int bytes = 0;
     int key;
     int scalsz = 3;
-    hsv hsvcode; 
-    rgb rgbcode;
-    float angle;
 
     //make img continuos
     if ( ! img.isContinuous() ) { 
@@ -187,15 +224,14 @@ int main(int argc, char** argv)
 
             Point startPt = Point(x*scalsz, y*scalsz);
             Point endPt = Point(x*scalsz + OF_x * 5,  y*scalsz + OF_y * 5);
-            /*
-            angle = atan2 (OF_y,OF_x) * 180 / (3.14);
-            hsvcode = {angle ,abs((OF_y+OF_x)/6) ,1};
-            rgbcode = hsv2rgb(hsvcode);
-            std::cout << "Vx Vy value is: " << (OF_x) << (OF_y) <<std::endl;
-            std::cout << "RGB R value is: " << (rgbcode.r) << std::endl;
-            std::cout << "RGB G value is: " << (rgbcode.g) << std::endl;
-            std::cout << "RGB B value is: " << (rgbcode.b) << std::endl;
-            */
+
+            //conver to motion color
+            // double param, result;
+            // param = double(OF_y)/double(OF_x);
+            // result = atan (param) * 180 / PI;
+            // HSV data = HSV(result, 0.43, 0.60);
+            // RGB value = HSVToRGB(data);
+
             // If (OF_x, OF_y) = (-4, -4) means it's invalid OF.
 	    if(OF_x != 3 && OF_y != 3)
 	    {
