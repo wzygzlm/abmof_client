@@ -218,7 +218,7 @@ int main(int argc, char** argv)
         cv::resize(img_color, img_resize, cv::Size(), scalsz, scalsz);
 
         //for reading the file
-        bytes = 1000;
+        bytes = 20000;
 
         // start reading from the fourth bytes. The first bytes are used to store some debug information from the server.
         for(int bufIndex = 4; bufIndex  < bytes; bufIndex = bufIndex + 4)
@@ -258,18 +258,18 @@ int main(int argc, char** argv)
             Point endPt = Point(x*scalsz + OF_x * 5,  y*scalsz + OF_y * 5);
 
             //conver to motion color
-            // double param, result;
-            // param = double(OF_y)/double(OF_x);
-            // result = atan (param) * 180 / PI;
-            // HSV data = HSV(result, 0.43, 0.60);
-            // RGB value = HSVToRGB(data);
+            double param, result;
+            param = double(OF_y)/double(OF_x);
+            result = atan (param) * 180 / PI;
+            HSV data = HSV(result, 0.9, 0.9);
+            RGB value = HSVToRGB(data);
 
             // If (OF_x, OF_y) = (-4, -4) means it's invalid OF.
 	    if(OF_x != 3 && OF_y != 3)
 	    {
 		    if(OF_x != -4 && OF_y != -4)
 		    {
-			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(0, 0, 255), 1);
+			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(value.B, value.G, value.R), 1);
 		    }
 	    }
 
