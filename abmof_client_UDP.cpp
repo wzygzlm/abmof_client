@@ -11,6 +11,10 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <vector>
+#include <fstream>
+#include <string>
+#include <sstream>
+
 
 using namespace cv;
 
@@ -184,20 +188,23 @@ int main(int argc, char** argv)
     // resizeWindow("Event sice Client", img.rows * 3,  img.cols * 3);
 
     // Send an simple message to start the connection.
-    char message[] = "OK.";
-    if ((bytes = sendto(sokt, message, sizeof(message) , MSG_WAITALL, (struct sockaddr *) &serverAddr, addrLen)) == -1) {
-        std::cerr << "send failed, received bytes = " << bytes << std::endl;
-    }
+    // char message[] = "OK.";
+    // if ((bytes = sendto(sokt, message, sizeof(message) , MSG_WAITALL, (struct sockaddr *) &serverAddr, addrLen)) == -1) {
+    //     std::cerr << "send failed, received bytes = " << bytes << std::endl;
+    // }
+
+    std::ifstream file("/home/kairx/kairx/INI/ABMOF/abmof_server/pig-withOFResult_areaThr_1000-OFResult.txt");
+    std::string str; 
 
     char recvBuf[imgSize];
-
+    int checknum = 0;
     while (key != 'q') {
 
         double minIntensity, maxIntensity;
 
-        if ((bytes = recvfrom(sokt, recvBuf, imgSize , MSG_WAITALL, (struct sockaddr *) &serverAddr, &addrLen)) == -1) {
-            std::cerr << "recv failed, received bytes = " << bytes << std::endl;
-        }
+        // if ((bytes = recvfrom(sokt, recvBuf, imgSize , MSG_WAITALL, (struct sockaddr *) &serverAddr, &addrLen)) == -1) {
+        //     std::cerr << "recv failed, received bytes = " << bytes << std::endl;
+        // }
 
         printf("Received %d data from the server.\n", bytes);
         printf("The first four bytes are %x, %x, %x, %x.\n", (uchar)recvBuf[0], (uchar)recvBuf[1], (uchar)recvBuf[2], (uchar)recvBuf[3]);
@@ -210,14 +217,39 @@ int main(int argc, char** argv)
         cvtColor(img, img_color, COLOR_GRAY2BGR);
         cv::resize(img_color, img_resize, cv::Size(), scalsz, scalsz);
 
+        //for reading the file
+        bytes = 1000;
+
         // start reading from the fourth bytes. The first bytes are used to store some debug information from the server.
         for(int bufIndex = 4; bufIndex  < bytes; bufIndex = bufIndex + 4)
         {
+
+            getline(file, str);
+            checknum = checknum+1;
+            std::cout<<checknum<<std::endl;
+            std::stringstream stream(str);
+
+            /*
             uchar x = recvBuf[bufIndex];
             uchar y = recvBuf[bufIndex + 1];
             uchar pol = recvBuf[bufIndex + 2] & 0x01; // The last bit of the third bytes is polarity.
             char OF_x = 3 - ((recvBuf[bufIndex + 2] & 0x0e) >> 1); // Notice the direction should start from t-2 slice to t-1 slice.
             char OF_y = 3 - ((recvBuf[bufIndex + 2] & 0x70) >> 4);
+            */
+
+            uint64_t ts;
+            int x;
+            int y;
+            int pol;
+            int OF_x;
+            int OF_y;
+
+            stream >> ts;
+            stream >> x;
+            stream >> y;
+            stream >> pol;
+            stream >> OF_x;
+            stream >> OF_y;
 
             // Only print once
             if (bufIndex == 4) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
