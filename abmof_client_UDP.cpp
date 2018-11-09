@@ -272,6 +272,37 @@ int main(int argc, char** argv)
 			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(value.B, value.G, value.R), 1);
 		    }
 	    }
+    for(int i = -3; i < 4; i++)
+    {
+        for(int j = -3; j < 4; j++)
+        {
+        double parammf, resultmf;
+        //parammf = (double(j)/double(i))+0.001;
+        resultmf = atan2(double(j),double(i)) * 180 / PI;
+        if(resultmf < 0)
+        {
+            resultmf = resultmf + 360;
+        }
+        HSV datamf = HSV(resultmf, 0.9, 0.9);
+        RGB valuemf = HSVToRGB(datamf);
+
+
+
+        int exsz = 10;
+        for(int m = 0; m < exsz; m++)
+        {
+        for(int n = 0; n < exsz; n++)
+        {
+        img_resize.at<Vec3b>((i+3)*exsz+m, (j+3)*exsz+n)[0] = valuemf.B;
+        img_resize.at<Vec3b>((i+3)*exsz+m, (j+3)*exsz+n)[1] = valuemf.G;
+        img_resize.at<Vec3b>((i+3)*exsz+m, (j+3)*exsz+n)[2] = valuemf.R;
+        }
+        }
+
+        }
+
+    }
+
 
             if(pol == 1)
             {
