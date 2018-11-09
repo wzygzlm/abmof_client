@@ -193,7 +193,7 @@ int main(int argc, char** argv)
     //     std::cerr << "send failed, received bytes = " << bytes << std::endl;
     // }
 
-    std::ifstream file("/home/kairx/kairx/INI/ABMOF/abmof_server/pig-withOFResult_areaThr_1000-OFResult.txt");
+    std::ifstream file("/home/petalinux/testResult.txt");
     std::string str; 
 
     char recvBuf[imgSize];
@@ -224,7 +224,11 @@ int main(int argc, char** argv)
         for(int bufIndex = 4; bufIndex  < bytes; bufIndex = bufIndex + 4)
         {
 
-            getline(file, str);
+            if(!getline(file, str))
+            {
+                file.clear();
+                file.seekg(0);
+            }
             checknum = checknum+1;
             std::cout<<checknum<<std::endl;
             std::stringstream stream(str);
@@ -251,6 +255,11 @@ int main(int argc, char** argv)
             stream >> OF_x;
             stream >> OF_y;
 
+            y = 179 -  y;
+            OF_x = 3 - OF_x;
+            OF_y = 3 - OF_y;
+            OF_y = - OF_y;
+
             // Only print once
             if (bufIndex == 4) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
 
@@ -265,7 +274,7 @@ int main(int argc, char** argv)
             RGB value = HSVToRGB(data);
 
             // If (OF_x, OF_y) = (-4, -4) means it's invalid OF.
-	    if(OF_x != 3 && OF_y != 3)
+//	    if(OF_x != 3 && OF_y != 3)
 	    {
 		    if(OF_x != -4 && OF_y != -4)
 		    {
