@@ -14,121 +14,11 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-
+#include "motion_field.h"
 
 using namespace cv;
 
 #define PI 3.14159265
-
-class RGB
-{
-public:
-	unsigned char R;
-	unsigned char G;
-	unsigned char B;
-
-	RGB(unsigned char r, unsigned char g, unsigned char b)
-	{
-		R = r;
-		G = g;
-		B = b;
-	}
-
-	bool Equals(RGB rgb)
-	{
-		return (R == rgb.R) && (G == rgb.G) && (B == rgb.B);
-	}
-};
-
-class HSV
-{
-public:
-	double H;
-	double S;
-	double V;
-
-	HSV(double h, double s, double v)
-	{
-		H = h;
-		S = s;
-		V = v;
-	}
-
-	bool Equals(HSV hsv)
-	{
-		return (H == hsv.H) && (S == hsv.S) && (V == hsv.V);
-	}
-};
-
-static RGB HSVToRGB(HSV hsv) {
-	double r = 0, g = 0, b = 0;
-
-	if (hsv.S == 0)
-	{
-		r = hsv.V;
-		g = hsv.V;
-		b = hsv.V;
-	}
-	else
-	{
-		int i;
-		double f, p, q, t;
-
-		if (hsv.H == 360)
-			hsv.H = 0;
-		else
-			hsv.H = hsv.H / 60;
-
-		i = (int)trunc(hsv.H);
-		f = hsv.H - i;
-
-		p = hsv.V * (1.0 - hsv.S);
-		q = hsv.V * (1.0 - (hsv.S * f));
-		t = hsv.V * (1.0 - (hsv.S * (1.0 - f)));
-
-		switch (i)
-		{
-		case 0:
-			r = hsv.V;
-			g = t;
-			b = p;
-			break;
-
-		case 1:
-			r = q;
-			g = hsv.V;
-			b = p;
-			break;
-
-		case 2:
-			r = p;
-			g = hsv.V;
-			b = t;
-			break;
-
-		case 3:
-			r = p;
-			g = q;
-			b = hsv.V;
-			break;
-
-		case 4:
-			r = t;
-			g = p;
-			b = hsv.V;
-			break;
-
-		default:
-			r = hsv.V;
-			g = p;
-			b = q;
-			break;
-		}
-
-	}
-
-	return RGB((unsigned char)(r * 255), (unsigned char)(g * 255), (unsigned char)(b * 255));
-}
 
 int main(int argc, char** argv)
 {
@@ -139,6 +29,31 @@ int main(int argc, char** argv)
     int         sokt;
     char*       serverIP;
     int         serverPort;
+    char*       filename;
+
+    //creat color map
+    int colormap[7][7][3];
+    int *clrmpindx = colormap[0][0];
+    for(int i = -3; i < 4; i++)
+    {
+        for(int j = -3; j < 4; j++)
+        {
+        double parammf, resultmf;
+        //param = (double(j)/double(i))+0.001;
+        resultmf = (-atan2(double(j),double(i))) * 180 / PI;
+        resultmf = resultmf + 179;
+        HSV data = HSV(resultmf, 0.9, 0.9);
+
+        RGB valuemf = HSVToRGB(data);
+
+        colormap[i+3][j+3][0] = valuemf.B;
+        colormap[i+3][j+3][1] = valuemf.G;
+        colormap[i+3][j+3][2] = valuemf.R;
+    }
+    }   
+    colormap[3][3][0] =  255;
+    colormap[3][3][1] =  255;
+    colormap[3][3][2] =  255;
 
     if (argc < 3) {
            std::cerr << "Usage: cv_video_cli <serverIP> <serverPort> " << std::endl;
@@ -146,9 +61,10 @@ int main(int argc, char** argv)
 
     serverIP   = argv[1];
     serverPort = atoi(argv[2]);
+    filename = argv[3];
 
     struct  sockaddr_in serverAddr;
-    socklen_t           addrLen = sizeof(struct sockaddr_in);
+    socklen_t addrLen = sizeof(struct sockaddr_in);
 
     if ((sokt = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
         std::cerr << "socket() failed" << std::endl;
@@ -176,6 +92,9 @@ int main(int argc, char** argv)
     int key;
     int scalsz = 3;
 
+    cvtColor(img, img_color, COLOR_GRAY2BGR);
+    cv::resize(img_color, img_resize, cv::Size(), scalsz, scalsz);
+
     //make img continuos
     if ( ! img.isContinuous() ) { 
           img = img.clone();
@@ -193,7 +112,7 @@ int main(int argc, char** argv)
     //     std::cerr << "send failed, received bytes = " << bytes << std::endl;
     // }
 
-    std::ifstream file("/home/petalinux/testResult.txt");
+    std::ifstream file(filename);
     std::string str; 
 
     char recvBuf[imgSize];
@@ -213,12 +132,13 @@ int main(int argc, char** argv)
 
         // Reset image
         // img = Mat::zeros(img.size(), img.type());
+        img_resize.setTo(130);
 
-        cvtColor(img, img_color, COLOR_GRAY2BGR);
-        cv::resize(img_color, img_resize, cv::Size(), scalsz, scalsz);
+        //cvtColor(img, img_color, COLOR_GRAY2BGR);
+        //cv::resize(img_color, img_resize, cv::Size(), scalsz, scalsz);
 
         //for reading the file
-        bytes = 20000;
+        bytes = 10000;
 
         // start reading from the fourth bytes. The first bytes are used to store some debug information from the server.
         for(int bufIndex = 4; bufIndex  < bytes; bufIndex = bufIndex + 4)
@@ -255,10 +175,12 @@ int main(int argc, char** argv)
             stream >> OF_x;
             stream >> OF_y;
 
-            y = 179 -  y;
-            OF_x = 3 - OF_x;
-            OF_y = 3 - OF_y;
-            OF_y = - OF_y;
+            // y = 179 -  y;
+            // OF_x = 3 - OF_x;
+            // OF_y = 3 - OF_y;
+            // OF_y = - OF_y;
+
+
 
             // Only print once
             if (bufIndex == 4) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
@@ -267,50 +189,40 @@ int main(int argc, char** argv)
             Point endPt = Point(x*scalsz + OF_x * 5,  y*scalsz + OF_y * 5);
 
             //conver to motion color
-            double param, result;
-            param = double(OF_y)/double(OF_x);
-            result = atan (param) * 180 / PI;
-            HSV data = HSV(result, 0.9, 0.9);
-            RGB value = HSVToRGB(data);
+            // double param, result;
+            // param = double(OF_y)/double(OF_x);
+            // result = atan (param) * 180 / PI;
+            // HSV data = HSV(result, 0.9, 0.9);
+            // RGB value = HSVToRGB(data);
 
             // If (OF_x, OF_y) = (-4, -4) means it's invalid OF.
 //	    if(OF_x != 3 && OF_y != 3)
 	    {
 		    if(OF_x != -4 && OF_y != -4)
 		    {
-			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(value.B, value.G, value.R), 1);
+			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(colormap[OF_x + 3][OF_y + 3][0], colormap[OF_x + 3][OF_y + 3][1], colormap[OF_x + 3][OF_y + 3][2]), 1);
 		    }
 	    }
-    for(int i = -3; i < 4; i++)
-    {
-        for(int j = -3; j < 4; j++)
-        {
-        double parammf, resultmf;
-        //parammf = (double(j)/double(i))+0.001;
-        resultmf = atan2(double(j),double(i)) * 180 / PI;
-        if(resultmf < 0)
-        {
-            resultmf = resultmf + 360;
-        }
-        HSV datamf = HSV(resultmf, 0.9, 0.9);
-        RGB valuemf = HSVToRGB(datamf);
 
 
 
-        int exsz = 10;
-        for(int m = 0; m < exsz; m++)
-        {
-        for(int n = 0; n < exsz; n++)
-        {
-        img_resize.at<Vec3b>((i+3)*exsz+m, (j+3)*exsz+n)[0] = valuemf.B;
-        img_resize.at<Vec3b>((i+3)*exsz+m, (j+3)*exsz+n)[1] = valuemf.G;
-        img_resize.at<Vec3b>((i+3)*exsz+m, (j+3)*exsz+n)[2] = valuemf.R;
-        }
-        }
-
-        }
-
-    }
+        // //show color map
+        // for(int i = -3; i < 4; i++)
+        // {
+        //     for(int j = -3; j < 4; j++)
+        //     {
+        //     int exsz = 10;
+        //     for(int m = 0; m < exsz; m++)
+        //         {
+        //         for(int n = 0; n < exsz; n++)
+        //         {
+        //         img_resize.at<Vec3b>((j+3)*exsz+m, (i+3)*exsz+n)[0] = colormap[i + 3][j + 3][0];
+        //         img_resize.at<Vec3b>((j+3)*exsz+m, (i+3)*exsz+n)[1] = colormap[i + 3][j + 3][1];
+        //         img_resize.at<Vec3b>((j+3)*exsz+m, (i+3)*exsz+n)[2] = colormap[i + 3][j + 3][2];
+        //         }
+        //         }
+        //     }
+        // }
 
 
             if(pol == 1)
@@ -343,6 +255,7 @@ int main(int argc, char** argv)
                 //img_color.at<Vec3b>(y, x)[1] = 0;
                 //img_color.at<Vec3b>(y, x)[2] = 0;
             }
+
             /*
             if(OF_x != -3 && OF_y != -3) //cv::line(img_color, startPt, endPt, (0, 0, 255), 1);
             {
