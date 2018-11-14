@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -g -Wall -O0
-SRC_TCP = abmof_client_TCP.cpp
-SRC_UDP = abmof_client_UDP.cpp
+SRC_TCP = abmof_client_TCP.cpp motion_field.cpp
+SRC_UDP = abmof_client_UDP.cpp motion_field.cpp
 PROG_TCP = abmof_client_TCP
 PROG_UDP = abmof_client_UDP
 

@@ -11,120 +11,14 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <vector>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include "motion_field.h"
 
 using namespace cv;
 
 #define PI 3.14159265
-
-class RGB
-{
-public:
-	unsigned char R;
-	unsigned char G;
-	unsigned char B;
-
-	RGB(unsigned char r, unsigned char g, unsigned char b)
-	{
-		R = r;
-		G = g;
-		B = b;
-	}
-
-	bool Equals(RGB rgb)
-	{
-		return (R == rgb.R) && (G == rgb.G) && (B == rgb.B);
-	}
-};
-
-class HSV
-{
-public:
-	double H;
-	double S;
-	double V;
-
-	HSV(double h, double s, double v)
-	{
-		H = h;
-		S = s;
-		V = v;
-	}
-
-	bool Equals(HSV hsv)
-	{
-		return (H == hsv.H) && (S == hsv.S) && (V == hsv.V);
-	}
-};
-
-static RGB HSVToRGB(HSV hsv) {
-	double r = 0, g = 0, b = 0;
-
-	if (hsv.S == 0)
-	{
-		r = hsv.V;
-		g = hsv.V;
-		b = hsv.V;
-	}
-	else
-	{
-		int i;
-		double f, p, q, t;
-
-		if (hsv.H == 360)
-			hsv.H = 0;
-		else
-			hsv.H = hsv.H / 60;
-
-		i = (int)trunc(hsv.H);
-		f = hsv.H - i;
-
-		p = hsv.V * (1.0 - hsv.S);
-		q = hsv.V * (1.0 - (hsv.S * f));
-		t = hsv.V * (1.0 - (hsv.S * (1.0 - f)));
-
-		switch (i)
-		{
-		case 0:
-			r = hsv.V;
-			g = t;
-			b = p;
-			break;
-
-		case 1:
-			r = q;
-			g = hsv.V;
-			b = p;
-			break;
-
-		case 2:
-			r = p;
-			g = hsv.V;
-			b = t;
-			break;
-
-		case 3:
-			r = p;
-			g = q;
-			b = hsv.V;
-			break;
-
-		case 4:
-			r = t;
-			g = p;
-			b = hsv.V;
-			break;
-
-		default:
-			r = hsv.V;
-			g = p;
-			b = q;
-			break;
-		}
-
-	}
-
-	return RGB((unsigned char)(r * 255), (unsigned char)(g * 255), (unsigned char)(b * 255));
-}
 
 int main(int argc, char** argv)
 {
@@ -135,6 +29,29 @@ int main(int argc, char** argv)
     int         sokt;
     char*       serverIP;
     int         serverPort;
+
+    //creat color map
+    int colormap[7][7][3];
+    for(int i = -3; i < 4; i++)
+    {
+        for(int j = -3; j < 4; j++)
+        {
+        double parammf, resultmf;
+        //param = (double(j)/double(i))+0.001;
+        resultmf = (atan2(double(j),double(i))+0.01) * 180 / PI;
+        resultmf = resultmf + 179;
+        HSV data = HSV(resultmf, 0.9, 0.9);
+
+        RGB valuemf = HSVToRGB(data);
+
+        colormap[i+3][j+3][0] = valuemf.B;
+        colormap[i+3][j+3][1] = valuemf.G;
+        colormap[i+3][j+3][2] = valuemf.R;
+    }
+    }   
+    colormap[3][3][0] =  255;
+    colormap[3][3][1] =  255;
+    colormap[3][3][2] =  255;
 
     if (argc < 3) {
            std::cerr << "Usage: cv_video_cli <serverIP> <serverPort> " << std::endl;
@@ -237,7 +154,7 @@ int main(int argc, char** argv)
 	    {
 		    if(OF_x != -4 && OF_y != -4)
 		    {
-			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(0, 0, 255), 1);
+			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(colormap[OF_x + 3][OF_y + 3][0], colormap[OF_x + 3][OF_y + 3][1], colormap[OF_x + 3][OF_y + 3][2]), 1);
 		    }
 	    }
 

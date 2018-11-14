@@ -11,80 +11,14 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <vector>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include "motion_field.h"
 
-using namespace cv; 
+using namespace cv;
 
-typedef struct {
-    double r;       // a fraction between 0 and 1
-    double g;       // a fraction between 0 and 1
-    double b;       // a fraction between 0 and 1
-} rgb;
-
-typedef struct {
-    double h;       // angle in degrees
-    double s;       // a fraction between 0 and 1
-    double v;       // a fraction between 0 and 1
-} hsv;
-
-static rgb   hsv2rgb(hsv in);
-
-rgb hsv2rgb(hsv in)
-{
-    double      hh, p, q, t, ff;
-    long        i;
-    rgb         out;
-
-    if(in.s <= 0.0) {       // < is bogus, just shuts up warnings
-        out.r = in.v;
-        out.g = in.v;
-        out.b = in.v;
-        return out;
-    }
-    hh = in.h;
-    if(hh >= 360.0) hh = 0.0;
-    hh /= 60.0;
-    i = (long)hh;
-    ff = hh - i;
-    p = in.v * (1.0 - in.s);
-    q = in.v * (1.0 - (in.s * ff));
-    t = in.v * (1.0 - (in.s * (1.0 - ff)));
-
-    switch(i) {
-    case 0:
-        out.r = in.v;
-        out.g = t;
-        out.b = p;
-        break;
-    case 1:
-        out.r = q;
-        out.g = in.v;
-        out.b = p;
-        break;
-    case 2:
-        out.r = p;
-        out.g = in.v;
-        out.b = t;
-        break;
-
-    case 3:
-        out.r = p;
-        out.g = q;
-        out.b = in.v;
-        break;
-    case 4:
-        out.r = t;
-        out.g = p;
-        out.b = in.v;
-        break;
-    case 5:
-    default:
-        out.r = in.v;
-        out.g = p;
-        out.b = q;
-        break;
-    }
-    return out;     
-}
+#define PI 3.14159265
 
 int main(int argc, char** argv)
 {
@@ -95,6 +29,29 @@ int main(int argc, char** argv)
     int         sokt;
     char*       serverIP;
     int         serverPort;
+
+    //creat color map
+    int colormap[7][7][3];
+    for(int i = -3; i < 4; i++)
+    {
+        for(int j = -3; j < 4; j++)
+        {
+        double parammf, resultmf;
+        //param = (double(j)/double(i))+0.001;
+        resultmf = (atan2(double(j),double(i))+0.01) * 180 / PI;
+        resultmf = resultmf + 179;
+        HSV data = HSV(resultmf, 0.9, 0.9);
+
+        RGB valuemf = HSVToRGB(data);
+
+        colormap[i+3][j+3][0] = valuemf.B;
+        colormap[i+3][j+3][1] = valuemf.G;
+        colormap[i+3][j+3][2] = valuemf.R;
+    }
+    }   
+    colormap[3][3][0] =  255;
+    colormap[3][3][1] =  255;
+    colormap[3][3][2] =  255;
 
     if (argc < 3) {
            std::cerr << "Usage: cv_video_cli <serverIP> <serverPort> " << std::endl;
@@ -113,7 +70,8 @@ int main(int argc, char** argv)
     serverAddr.sin_family = PF_INET;
     serverAddr.sin_addr.s_addr = inet_addr(serverIP);
     serverAddr.sin_port = htons(serverPort);
-if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
+
+    if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
         std::cerr << "connect() failed!" << std::endl;
     }
 
@@ -130,9 +88,6 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
     int bytes = 0;
     int key;
     int scalsz = 3;
-    hsv hsvcode; 
-    rgb rgbcode;
-    float angle;
 
     //make img continuos
     if ( ! img.isContinuous() ) { 
@@ -190,13 +145,13 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
             std::cout << "RGB B value is: " << (rgbcode.b) << std::endl;
             */
             // If (OF_x, OF_y) = (-4, -4) means it's invalid OF.
-	    if(OF_x != 3 && OF_y != 3)
-	    {
-		    if(OF_x != -4 && OF_y != -4)
-		    {
-			    cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(0, 0, 255), 1);
-		    }
-	    }
+        if(OF_x != 3 && OF_y != 3)
+        {
+            if(OF_x != -4 && OF_y != -4)
+            {
+                cv::arrowedLine(img_resize, startPt, endPt, cv::Scalar(0, 0, 255), 1);
+            }
+        }
 
             if(pol == 1)
             {
@@ -270,4 +225,4 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
     close(sokt);
 
     return 0;
-}	
+}   
