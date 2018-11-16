@@ -58,9 +58,9 @@ if (connect(sokt, (sockaddr*)&serverAddr, addrLen) < 0) {
     int bytes = 0;
     int key;
     int scalsz = 3;
-    hsv hsvcode; 
-    rgb rgbcode;
-    float angle;
+//    hsv hsvcode; 
+//    rgb rgbcode;
+//    float angle;
 
     //make img continuos
     if ( ! img.isContinuous() ) { 
