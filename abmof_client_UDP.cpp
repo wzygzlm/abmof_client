@@ -150,7 +150,7 @@ int main(int argc, char** argv)
             // RGB value = HSVToRGB(data);
 
             // If (OF_x, OF_y) = (-4, -4) means it's invalid OF.
-	    if(OF_x != 3 && OF_y != 3)
+//	    if(OF_x != 3 && OF_y != 3)
 	    {
 		    if(OF_x != -4 && OF_y != -4)
 		    {
