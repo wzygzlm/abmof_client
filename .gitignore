@@ -1,3 +1,6 @@
 *~
 abmof_client_TCP
+abmof_client_TCP.dsYM
 abmof_client_UDP
+abmof_client_UDP.dsYM
+compile_commands.json
