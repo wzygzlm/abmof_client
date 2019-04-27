@@ -17,5 +17,5 @@ make
 
 3. run the client, 4097 is the server port number. It's not fixed and could changed by the server.
 
-./abmof_client_TCP 4097 10000 10000 1 for TCP
-./abmof_client_UDP 4097 10000 10000 0 for UDP
+./abmof_client_TCP serverIP 4097 for TCP
+./abmof_client_UDP serverIP 4097 for UDP
