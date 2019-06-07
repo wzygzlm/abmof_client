@@ -1,6 +1,8 @@
 *~
 abmof_client_TCP
-abmof_client_TCP.dsYM
+abmof_client_TCP.dSYM
 abmof_client_UDP
-abmof_client_UDP.dsYM
+abmof_client_UDP.dSYM
 compile_commands.json
+demo_Harris
+demo_Harris.dSYM
