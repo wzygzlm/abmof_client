@@ -3,6 +3,10 @@ abmof_client_TCP
 abmof_client_TCP.dSYM
 abmof_client_UDP
 abmof_client_UDP.dSYM
+efast_client_TCP
+efast_client_TCP.dSYM
+efast_client_UDP
+efast_client_UDP.dSYM
 compile_commands.json
 demo_Harris
 demo_Harris.dSYM
