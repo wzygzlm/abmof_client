@@ -133,14 +133,10 @@ int main(int argc, char** argv)
             uchar x = recvBuf[bufIndex];
             uchar y = recvBuf[bufIndex + 1];
             uchar pol = recvBuf[bufIndex + 2] & 0x01; // The last bit of the third bytes is polarity.
-            char OF_x = 3 - ((recvBuf[bufIndex + 2] & 0x0e) >> 1); // Notice the direction should start from t-2 slice to t-1 slice.
-            char OF_y = 3 - ((recvBuf[bufIndex + 2] & 0x70) >> 4);
+            bool isCorner = recvBuf[bufIndex + 3] & 0x80; // The highest bit is the corner result
 
             // Only print once
-            if (bufIndex == 4) printf("OF_x is  %d, OF_y is %d.\n", OF_x, OF_y);
-
-            Point startPt = Point(x*scalsz, y*scalsz);
-            Point endPt = Point(x*scalsz + OF_x * 5,  y*scalsz + OF_y * 5);
+            if (bufIndex%4 == 0 && isCorner) printf("Current event is a corner.\n");
 
             if(pol == 1)
             {
@@ -172,6 +168,13 @@ int main(int argc, char** argv)
                 //img_color.at<Vec3b>(y, x)[1] = 0;
                 //img_color.at<Vec3b>(y, x)[2] = 0;
             }
+
+            /// Drawing a circle around corners
+            if( isCorner )
+            {
+                circle( img_resize, Point( x, y ), 5,  Scalar(0), 2, 8, 0 );
+            }
+
         }
 
         cv::imshow("Event slice Client", img_resize); 
